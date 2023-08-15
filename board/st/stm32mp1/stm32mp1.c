@@ -1030,6 +1030,32 @@ int board_interface_eth_init(struct udevice *dev,
 	return ret;
 }
 
+int board_phy_config(struct phy_device *phydev)
+{
+	if (of_machine_is_compatible("emcraft,stm32mp1-som")) {
+		unsigned short val;
+
+		/* enable rgmii rxc skew and phy mode select to RGMII copper */
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x1f);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x8);
+
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1d, 0x05);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0x1e, 0x100);
+
+		/* Make the phy generate 125MHz clock on CLK_25M output clock */
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x0007);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xe, 0x8016);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xd, 0x4007);
+		val = phy_read(phydev, MDIO_DEVAD_NONE, 0xe);
+		phy_write(phydev, MDIO_DEVAD_NONE, 0xe, val | 0x18);
+
+		if (phydev->drv->config)
+			phydev->drv->config(phydev);
+	}
+
+	return 0;
+}
+
 enum env_location env_get_location(enum env_operation op, int prio)
 {
 	u32 bootmode = get_bootmode();

@@ -10,6 +10,9 @@
 
 #define STM32MP_BOARD_EXTRA_ENV \
 	"usb_pgood_delay=2000\0" \
+	"ethaddr=3C:FB:96:44:44:AC\0" \
+	"ipaddr=192.168.1.8\0" \
+	"serverip=192.168.1.1\0" \
 	"console=ttySTM0\0"
 
 #include <configs/stm32mp15_common.h>

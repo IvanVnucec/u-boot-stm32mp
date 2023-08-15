@@ -107,20 +107,6 @@
 		};
 	};
 
-	sd_switch: regulator-sd-switch {
-		compatible = "regulator-gpio";
-		regulator-name = "sd_switch";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <2900000>;
-		regulator-type = "voltage";
-		regulator-always-on;
-
-		gpios = <&gpiof 14 GPIO_ACTIVE_HIGH>;
-		gpios-states = <0>;
-		states = <1800000 0x1>,
-			 <2900000 0x0>;
-	};
-
 	vin: vin {
 		compatible = "regulator-fixed";
 		regulator-name = "vin";
@@ -192,15 +178,26 @@
 		status = "okay";
 	};
 
+	usb_phy_tuning: usb-phy-tuning {
+		st,hs-dc-level = <2>;
+		st,fs-rftime-tuning;
+		st,hs-rftime-reduction;
+		st,hs-current-trim = <15>;
+		st,hs-impedance-trim = <1>;
+		st,squelch-level = <3>;
+		st,hs-rx-offset = <2>;
+		st,no-lsfs-sc;
+	};
+
 	regulators {
 		compatible = "simple-bus";
 		#address-cells = <1>;
-		#size-cells = <0>;
-		pinctrl-0 = <&periph_on_pin>;
-		pinctrl-names = "default";
+		#size-cells = <1>;
 
 		periph_on: periph_on-regulator {
 			compatible = "regulator-fixed";
+			pinctrl-0 = <&periph_on_pin>;
+			pinctrl-names = "default";
 			reg = <1>;
 			regulator-name = "periph_on";
 			regulator-min-microvolt = <3300000>;
@@ -210,6 +207,48 @@
 			regulator-always-on;
 			regulator-boot-on;
 			gpio = <&gpiof 3 GPIO_ACTIVE_HIGH>;
+		};
+
+		usb_host_vbus: usb-host-regulator {
+			compatible = "regulator-fixed";
+			pinctrl-0 = <&usb_bus_pinctrl>;
+			pinctrl-names = "default";
+			reg = <1>;
+			regulator-name = "usb_host_vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			gpio = <&gpiod 14 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+                };
+
+		usb_otg1_vbus: usb-otg1-regulator {
+			compatible = "regulator-fixed";
+			pinctrl-0 = <&usb_otg_pinctrl>;
+			pinctrl-names = "default";
+			reg = <1>;
+			regulator-name = "usb_otg1_vbus";
+			regulator-min-microvolt = <5000000>;
+			regulator-max-microvolt = <5000000>;
+			gpio = <&gpioa 15 GPIO_ACTIVE_HIGH>;
+			enable-active-high;
+		};
+
+		v3v3: v3v3 {
+			compatible = "regulator-fixed";
+			regulator-name = "v3v3";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			regulator-always-on;
+		};
+
+		eth_reg: eth_reg {
+			compatible = "regulator-fixed";
+			reg = <1>;
+			regulator-name = "eth_reg";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			enable-active-high;
+			gpio = <&gpiod 11 GPIO_ACTIVE_HIGH>;
 		};
 	};
 };
@@ -249,7 +288,6 @@
 &dac {
 	pinctrl-names = "default";
 	pinctrl-0 = <&dac_ch1_pins_a &dac_ch2_pins_a>;
-	vref-supply = <&vdda>;
 	status = "disabled";
 	dac1: dac@1 {
 		status = "okay";
@@ -293,20 +331,6 @@
 
 &rtc {
 	status = "okay";
-};
-
-
-&sdmmc1_b4_pins_a {
-		  pins1 {
-			slew-rate = <0>;
-			bias-pull-up;
-			/delete-property/bias-disable;
-		  };
-		  pins2 {
-			slew-rate = <0>;
-			bias-pull-up;
-			/delete-property/bias-disable;
-		  };
 };
 
 &sdmmc1 {
@@ -361,13 +385,45 @@
 	status = "okay";
 };
 
+&usbh_ehci {
+	phys = <&usbphyc_port0>;
+	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
+	/* onboard HUB */
+	hub@1 {
+		compatible = "usb424,2514";
+		reg = <1>;
+		vdd-supply = <&v3v3>;
+	};
+};
+
 &usbotg_hs {
+	pinctrl-0 = <&usbotg_hs_pins_a>;
+	pinctrl-names = "default";
+	phys = <&usbphyc_port1 0>;
+	usb-role-switch;
+	vbus-supply = <&usb_otg1_vbus>;
+	phy-names = "usb2-phy";
+	status = "okay";
+};
+
+&usbphyc {
+	status = "okay";
 };
 
 &usbphyc_port0 {
+	st,phy-tuning = <&usb_phy_tuning>;
+	phy-supply = <&v3v3>;
+	connector {
+		compatible = "usb-a-connector";
+		vbus-supply = <&usb_host_vbus>;
+	};
 };
 
 &usbphyc_port1 {
+	st,phy-tuning = <&usb_phy_tuning>;
+	phy-supply = <&v3v3>;
 };
 
 &cec {
@@ -531,6 +587,10 @@
 	phy-mode = "rgmii-id";
 	max-speed = <1000>;
 	phy-handle = <&phy0>;
+ 	nvmem-cells = <&ethernet_mac_address>;
+ 	nvmem-cell-names = "mac-address";
+	phy-supply = <&eth_reg>;
+	st,int-phyclk;
  	clock-names = "stmmaceth",
  		"mac-clk-tx",
  		"mac-clk-rx",
@@ -542,7 +602,7 @@
  		<&rcc ETHRX>,
 		<&rcc ETHSTP>,
 		<&rcc SYSCFG>,
-		<&rcc ETHCK>;
+		<&rcc ETHCK_K>;
 	st,eth-clk-sel;
 
 	mdio0 {
@@ -551,24 +611,6 @@
 		compatible = "snps,dwmac-mdio";
 		phy0: ethernet-phy@0 {
 			reg = <0>;
-		};
-	};
-};
-
-&fmc {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&fmc_pins_a>;
-	pinctrl-1 = <&fmc_sleep_pins_a>;
-	status = "okay";
-
-	nand-controller@4,0 {
-		status = "okay";
-
-		nand@0 {
-			reg = <0>;
-			nand-on-flash-bbt;
-			#address-cells = <1>;
-			#size-cells = <1>;
 		};
 	};
 };
@@ -610,54 +652,6 @@
 	pinctrl-0 = <&m_can1_pins_a>;
 	pinctrl-1 = <&m_can1_sleep_pins_a>;
 	status = "okay";
-};
-
-&qspi {
-	pinctrl-names = "default", "sleep";
-	pinctrl-0 = <&qspi_clk_pins_a
-		     &qspi_bk1_pins_a
-		     &qspi_cs1_pins_a
-		     &qspi_bk2_pins_a
-		     &qspi_cs2_pins_a>;
-	pinctrl-1 = <&qspi_clk_sleep_pins_a
-		     &qspi_bk1_sleep_pins_a
-		     &qspi_cs1_sleep_pins_a
-		     &qspi_bk2_sleep_pins_a
-		     &qspi_cs2_sleep_pins_a>;
-	reg = <0x58003000 0x1000>, <0x70000000 0x4000000>;
-	#address-cells = <1>;
-	#size-cells = <0>;
-	status = "okay";
-
-	flash0: flash@0 {
-		compatible = "jedec,spi-nor";
-		reg = <0>;
-		spi-rx-bus-width = <4>;
-		spi-max-frequency = <108000000>;
-		#address-cells = <1>;
-		#size-cells = <1>;
-	};
-
-	flash1: flash@1 {
-		compatible = "jedec,spi-nor";
-		reg = <1>;
-		spi-rx-bus-width = <4>;
-		spi-max-frequency = <108000000>;
-		#address-cells = <1>;
-		#size-cells = <1>;
-	};
-};
-
-&sdmmc3 {
-	pinctrl-names = "default", "opendrain", "sleep";
-	pinctrl-0 = <&sdmmc3_b4_pins_a>;
-	pinctrl-1 = <&sdmmc3_b4_od_pins_a>;
-	pinctrl-2 = <&sdmmc3_b4_sleep_pins_a>;
-	broken-cd;
-	st,neg-edge;
-	bus-width = <4>;
-	vmmc-supply = <&v3v3>;
-	status = "disabled";
 };
 
 &spi1 {
@@ -773,7 +767,6 @@
 	st,no-lsfs-sc;
 	connector {
 		compatible = "usb-a-connector";
-		vbus-supply = <&vbus_sw>;
 	};
 };
 
@@ -788,34 +781,66 @@
 	st,no-lsfs-sc;
 };
 
+&ethernet0_rgmii_pins_a {
+	pins1 {
+		pinmux = <STM32_PINMUX('G', 5, AF11)>, /* ETH_RGMII_CLK125 */
+		<STM32_PINMUX('G', 4, AF11)>, /* ETH_RGMII_GTX_CLK */
+		<STM32_PINMUX('G', 8, AF2)>, /* ETH_CLK */
+		<STM32_PINMUX('G', 13, AF11)>, /* ETH_RGMII_TXD0 */
+		<STM32_PINMUX('G', 14, AF11)>, /* ETH_RGMII_TXD1 */
+		<STM32_PINMUX('C', 2, AF11)>, /* ETH_RGMII_TXD2 */
+		<STM32_PINMUX('E', 2, AF11)>, /* ETH_RGMII_TXD3 */
+		<STM32_PINMUX('B', 11, AF11)>, /* ETH_RGMII_TX_CTL */
+		<STM32_PINMUX('A', 2, AF11)>, /* ETH_MDIO */
+		<STM32_PINMUX('C', 1, AF11)>; /* ETH_MDC */
+		bias-disable;
+		drive-push-pull;
+		slew-rate = <3>;
+	};
+	pins2 {
+		pinmux = <STM32_PINMUX('C', 4, AF11)>, /* ETH_RGMII_RXD0 */
+		<STM32_PINMUX('C', 5, AF11)>, /* ETH_RGMII_RXD1 */
+		<STM32_PINMUX('B', 0, AF11)>, /* ETH_RGMII_RXD2 */
+		<STM32_PINMUX('B', 1, AF11)>, /* ETH_RGMII_RXD3 */
+		<STM32_PINMUX('A', 1, AF11)>, /* ETH_RGMII_RX_CLK */
+		<STM32_PINMUX('A', 7, AF11)>; /* ETH_RGMII_RX_CTL */
+		bias-disable;
+	};
+	pins3 {
+		pinmux = <STM32_PINMUX('D', 11, GPIO)>; /* PHY reset */
+		drive-push-pull;
+		bias-pull-up;
+		output-high;
+		slew-rate = <0>;
+	};
+};
+
+&ethernet0_rgmii_sleep_pins_a {
+	pins1 {
+		pinmux = <STM32_PINMUX('G', 5, ANALOG)>, /* ETH_RGMII_CLK125 */
+		<STM32_PINMUX('G', 4, ANALOG)>, /* ETH_RGMII_GTX_CLK */
+		<STM32_PINMUX('G', 8, ANALOG)>, /* ETH_CLK */
+		<STM32_PINMUX('G', 13, ANALOG)>, /* ETH_RGMII_TXD0 */
+		<STM32_PINMUX('G', 14, ANALOG)>, /* ETH_RGMII_TXD1 */
+		<STM32_PINMUX('C', 2, ANALOG)>, /* ETH_RGMII_TXD2 */
+		<STM32_PINMUX('E', 2, ANALOG)>, /* ETH_RGMII_TXD3 */
+		<STM32_PINMUX('B', 11, ANALOG)>, /* ETH_RGMII_TX_CTL */
+		<STM32_PINMUX('A', 2, ANALOG)>, /* ETH_MDIO */
+		<STM32_PINMUX('C', 1, ANALOG)>, /* ETH_MDC */
+		<STM32_PINMUX('C', 4, ANALOG)>, /* ETH_RGMII_RXD0 */
+		<STM32_PINMUX('C', 5, ANALOG)>, /* ETH_RGMII_RXD1 */
+		<STM32_PINMUX('B', 0, ANALOG)>, /* ETH_RGMII_RXD2 */
+		<STM32_PINMUX('B', 1, ANALOG)>, /* ETH_RGMII_RXD3 */
+		<STM32_PINMUX('A', 1, ANALOG)>, /* ETH_RGMII_RX_CLK */
+		<STM32_PINMUX('A', 7, ANALOG)>, /* ETH_RGMII_RX_CTL */
+		<STM32_PINMUX('D', 11, ANALOG)>; /* PHY reset */
+	};
+};
+
 &pinctrl {
-	ethernet0_rgmii_pins_a: rgmii-0 {
-		pins1 {
-			pinmux = <STM32_PINMUX('G', 5, AF11)>, /* ETH_RGMII_CLK125 */
-			<STM32_PINMUX('G', 4, AF11)>, /* ETH_RGMII_GTX_CLK */
-			<STM32_PINMUX('G', 8, AF2)>, /* ETH_CLK */
-			<STM32_PINMUX('G', 13, AF11)>, /* ETH_RGMII_TXD0 */
-			<STM32_PINMUX('G', 14, AF11)>, /* ETH_RGMII_TXD1 */
-			<STM32_PINMUX('C', 2, AF11)>, /* ETH_RGMII_TXD2 */
-			<STM32_PINMUX('E', 2, AF11)>, /* ETH_RGMII_TXD3 */
-			<STM32_PINMUX('B', 11, AF11)>, /* ETH_RGMII_TX_CTL */
-			<STM32_PINMUX('A', 2, AF11)>, /* ETH_MDIO */
-			<STM32_PINMUX('C', 1, AF11)>; /* ETH_MDC */
-			bias-disable;
-			drive-push-pull;
-			slew-rate = <3>;
-		};
-		pins2 {
-			pinmux = <STM32_PINMUX('C', 4, AF11)>, /* ETH_RGMII_RXD0 */
-			<STM32_PINMUX('C', 5, AF11)>, /* ETH_RGMII_RXD1 */
-			<STM32_PINMUX('B', 0, AF11)>, /* ETH_RGMII_RXD2 */
-			<STM32_PINMUX('B', 1, AF11)>, /* ETH_RGMII_RXD3 */
-			<STM32_PINMUX('A', 1, AF11)>, /* ETH_RGMII_RX_CLK */
-			<STM32_PINMUX('A', 7, AF11)>; /* ETH_RGMII_RX_CTL */
-			bias-disable;
-		};
-		pins3 {
-			pinmux = <STM32_PINMUX('D', 11, GPIO)>; /* PHY reset */
+	periph_on_pin: periph-on-0 {
+		pins {
+			pinmux = <STM32_PINMUX('F', 3, GPIO)>; /* USB_OTG1_PWR */
 			drive-push-pull;
 			bias-pull-up;
 			output-high;
@@ -823,31 +848,19 @@
 		};
 	};
 
-	ethernet0_rgmii_pins_sleep_a: rgmii-sleep-0 {
-		pins1 {
-			pinmux = <STM32_PINMUX('G', 5, ANALOG)>, /* ETH_RGMII_CLK125 */
-			<STM32_PINMUX('G', 4, ANALOG)>, /* ETH_RGMII_GTX_CLK */
-			<STM32_PINMUX('G', 8, ANALOG)>, /* ETH_CLK */
-			<STM32_PINMUX('G', 13, ANALOG)>, /* ETH_RGMII_TXD0 */
-			<STM32_PINMUX('G', 14, ANALOG)>, /* ETH_RGMII_TXD1 */
-			<STM32_PINMUX('C', 2, ANALOG)>, /* ETH_RGMII_TXD2 */
-			<STM32_PINMUX('E', 2, ANALOG)>, /* ETH_RGMII_TXD3 */
-			<STM32_PINMUX('B', 11, ANALOG)>, /* ETH_RGMII_TX_CTL */
-			<STM32_PINMUX('A', 2, ANALOG)>, /* ETH_MDIO */
-			<STM32_PINMUX('C', 1, ANALOG)>, /* ETH_MDC */
-			<STM32_PINMUX('C', 4, ANALOG)>, /* ETH_RGMII_RXD0 */
-			<STM32_PINMUX('C', 5, ANALOG)>, /* ETH_RGMII_RXD1 */
-			<STM32_PINMUX('B', 0, ANALOG)>, /* ETH_RGMII_RXD2 */
-			<STM32_PINMUX('B', 1, ANALOG)>, /* ETH_RGMII_RXD3 */
-			<STM32_PINMUX('A', 1, ANALOG)>, /* ETH_RGMII_RX_CLK */
-			<STM32_PINMUX('A', 7, ANALOG)>, /* ETH_RGMII_RX_CTL */
-			<STM32_PINMUX('D', 11, ANALOG)>; /* PHY reset */
+	usb_bus_pinctrl: usb-bus-pinctrl {
+		pins {
+			pinmux = <STM32_PINMUX('A', 15, GPIO)>; /* USB_BUS_PWR */
+			drive-push-pull;
+			bias-pull-up;
+			output-high;
+			slew-rate = <0>;
 		};
 	};
 
-	periph_on_pin: periph-on-0 {
+	usb_otg_pinctrl: usb-bus-pinctrl {
 		pins {
-			pinmux = <STM32_PINMUX('F', 3, GPIO)>; /* PERIPH_ON */
+			pinmux = <STM32_PINMUX('D', 14, GPIO)>; /* USB_OTG1_PWR */
 			drive-push-pull;
 			bias-pull-up;
 			output-high;
