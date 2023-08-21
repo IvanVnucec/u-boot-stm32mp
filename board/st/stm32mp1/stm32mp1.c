@@ -848,6 +848,7 @@ int board_late_init(void)
 	char buf[10];
 	char dtb_name[256];
 	int buf_len;
+	int prefix_len;
 
 	if (board_is_stm32mp15x_ev1())
 		board_stm32mp15x_ev1_init();
@@ -859,14 +860,16 @@ int board_late_init(void)
 		fdt_compat = ofnode_get_property(ofnode_root(), "compatible",
 						 &fdt_compat_len);
 		if (fdt_compat && fdt_compat_len) {
-			if (strncmp(fdt_compat, "st,", 3) != 0) {
+			if (strncmp(fdt_compat, "st,", 3) != 0 &&
+			    strncmp(fdt_compat, "emcraft,", 8) != 0) {
 				env_set("board_name", fdt_compat);
 			} else {
-				env_set("board_name", fdt_compat + 3);
+				prefix_len = strncmp(fdt_compat, "st,", 3) == 0 ? 3 : 8;
+				env_set("board_name", fdt_compat + prefix_len);
 
 				buf_len = sizeof(dtb_name);
-				strncpy(dtb_name, fdt_compat + 3, buf_len);
-				buf_len -= strlen(fdt_compat + 3);
+				strncpy(dtb_name, fdt_compat + prefix_len, buf_len);
+				buf_len -= strlen(fdt_compat + prefix_len);
 				strncat(dtb_name, ".dtb", buf_len);
 				env_set("fdtfile", dtb_name);
 			}

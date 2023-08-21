@@ -17,7 +17,7 @@
 
 / {
 	model = "Emcraft STM32MP1 SOM Rev 1A";
-	compatible = "emcraft,stm32mp1-som", "st,stm32mp157a-ev1", "st,stm32mp157";
+	compatible = "emcraft,stm32mp157a-som", "st,stm32mp157a-ev1", "st,stm32mp157";
 
 	aliases {
 		serial0 = &uart4;
