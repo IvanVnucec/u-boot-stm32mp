@@ -196,8 +196,6 @@
 
 		periph_on: periph_on-regulator {
 			compatible = "regulator-fixed";
-			pinctrl-0 = <&periph_on_pin>;
-			pinctrl-names = "default";
 			reg = <1>;
 			regulator-name = "periph_on";
 			regulator-min-microvolt = <3300000>;
@@ -209,10 +207,21 @@
 			gpio = <&gpiof 3 GPIO_ACTIVE_HIGH>;
 		};
 
+		sub_nrst: sub_nrst-regulator {
+			compatible = "regulator-fixed";
+			reg = <1>;
+			regulator-name = "sub_nrst";
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+			startup-delay-us = <2000000>;
+			enable-active-high;
+			regulator-always-on;
+			regulator-boot-on;
+			gpio = <&gpiod 10 GPIO_ACTIVE_HIGH>;
+		};
+
 		usb_host_vbus: usb-host-regulator {
 			compatible = "regulator-fixed";
-			pinctrl-0 = <&usb_bus_pinctrl>;
-			pinctrl-names = "default";
 			reg = <1>;
 			regulator-name = "usb_host_vbus";
 			regulator-min-microvolt = <5000000>;
@@ -223,8 +232,6 @@
 
 		usb_otg1_vbus: usb-otg1-regulator {
 			compatible = "regulator-fixed";
-			pinctrl-0 = <&usb_otg_pinctrl>;
-			pinctrl-names = "default";
 			reg = <1>;
 			regulator-name = "usb_otg1_vbus";
 			regulator-min-microvolt = <5000000>;
@@ -834,37 +841,5 @@
 		<STM32_PINMUX('A', 1, ANALOG)>, /* ETH_RGMII_RX_CLK */
 		<STM32_PINMUX('A', 7, ANALOG)>, /* ETH_RGMII_RX_CTL */
 		<STM32_PINMUX('D', 11, ANALOG)>; /* PHY reset */
-	};
-};
-
-&pinctrl {
-	periph_on_pin: periph-on-0 {
-		pins {
-			pinmux = <STM32_PINMUX('F', 3, GPIO)>; /* USB_OTG1_PWR */
-			drive-push-pull;
-			bias-pull-up;
-			output-high;
-			slew-rate = <0>;
-		};
-	};
-
-	usb_bus_pinctrl: usb-bus-pinctrl {
-		pins {
-			pinmux = <STM32_PINMUX('A', 15, GPIO)>; /* USB_BUS_PWR */
-			drive-push-pull;
-			bias-pull-up;
-			output-high;
-			slew-rate = <0>;
-		};
-	};
-
-	usb_otg_pinctrl: usb-bus-pinctrl {
-		pins {
-			pinmux = <STM32_PINMUX('D', 14, GPIO)>; /* USB_OTG1_PWR */
-			drive-push-pull;
-			bias-pull-up;
-			output-high;
-			slew-rate = <0>;
-		};
 	};
 };

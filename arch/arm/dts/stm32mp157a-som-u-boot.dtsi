@@ -65,10 +65,3 @@
 		u-boot,dm-pre-reloc;
 	};
 };
-
-&periph_on_pin {
-	u-boot,dm-pre-reloc;
-	pins {
-		u-boot,dm-pre-reloc;
-	};
-};
