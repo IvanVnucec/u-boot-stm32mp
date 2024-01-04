@@ -1035,7 +1035,8 @@ int board_interface_eth_init(struct udevice *dev,
 
 int board_phy_config(struct phy_device *phydev)
 {
-	if (of_machine_is_compatible("emcraft,stm32mp157a-som")) {
+	if (of_machine_is_compatible("emcraft,stm32mp157a-som") ||
+	    of_machine_is_compatible("emcraft,stm32mp157d-som")) {
 		unsigned short val;
 
 		/* enable rgmii rxc skew and phy mode select to RGMII copper */
