@@ -1332,6 +1332,11 @@ F:	common/stackprot.c
 F:	cmd/stackprot_test.c
 F:	test/py/tests/test_stackprotector.py
 
+STM32-MP1-SOM
+M:	Dmitry Konyshev <dmitry.konyshev@emcraft.com>
+S:	Maintained
+F:	configs/stm32mp1*_som_defconfig
+
 TARGET_BCMNS3
 M:	Bharat Gooty <bharat.gooty@broadcom.com>
 M:	Rayagonda Kokatanur <rayagonda.kokatanur@broadcom.com>
