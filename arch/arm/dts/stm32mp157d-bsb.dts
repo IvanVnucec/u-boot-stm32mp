@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: (GPL-2.0-or-later OR BSD-3-Clause)
 /*
- * Copyright (C) STMicroelectronics 2022 - All Rights Reserved
- * Author: Alexandre Torgue <alexandre.torgue@foss.st.com> for STMicroelectronics.
+ * Copyright (C) Emcraft Systems 2023 - All Rights Reserved
  */
 /dts-v1/;
 
 #include "stm32mp157.dtsi"
-#include "stm32mp15xa.dtsi"
+#include "stm32mp15xd.dtsi"
 #include "stm32mp15-pinctrl.dtsi"
 #include "stm32mp15xxaa-pinctrl.dtsi"
 #include "stm32mp15-m4-srm.dtsi"
 #include "stm32mp15-m4-srm-pinctrl.dtsi"
-#include "stm32mp157a-som-scmi.dtsi"
+#include "stm32mp157d-bsb-scmi.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 
 / {
-	model = "Emcraft STM32MP1 SOM Rev 1A";
-	compatible = "emcraft,stm32mp157a-som", "st,stm32mp157a-ev1", "st,stm32mp157";
+	model = "Emcraft STM32MP157x SOM Rev 3A";
+	compatible = "emcraft,stm32mp157x-bsb", "st,stm32mp157d-ev1", "st,stm32mp157";
 
 	aliases {
 		serial0 = &uart4;
