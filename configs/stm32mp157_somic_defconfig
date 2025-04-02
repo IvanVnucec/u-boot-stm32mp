@@ -1,5 +1,5 @@
 # TODO: Remove this once the issues are fixed
-#CONFIG_LOG_MAX_LEVEL=7
+CONFIG_LOG_MAX_LEVEL=7
 CONFIG_DEBUG_UART=y
 CONFIG_DEBUG_UART_STM32=y
 
