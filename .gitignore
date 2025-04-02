@@ -34,6 +34,7 @@
 *.tab.[ch]
 
 # Build tree
+/build/
 /build-*
 
 #
