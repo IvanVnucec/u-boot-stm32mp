@@ -6,7 +6,7 @@
 #include "stm32mp15xxaa-pinctrl.dtsi"
 #include "stm32mp15-m4-srm.dtsi"
 #include "stm32mp15-m4-srm-pinctrl.dtsi"
-#include "stm32mp157d-bsb-scmi.dtsi"
+#include "stm32mp157-somic-scmi.dtsi"
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/input/input.h>
 
