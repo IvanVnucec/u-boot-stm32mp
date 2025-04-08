@@ -12,7 +12,7 @@
 
 / {
 	model = "STM32MP157 SOMIC";
-	compatible = "st,stm32mp157d-ev1", "st,stm32mp157";
+	compatible = "st,stm32mp157-somic", "st,stm32mp157d-ev1", "st,stm32mp157";
 
 	aliases {
 		serial0 = &uart4;
