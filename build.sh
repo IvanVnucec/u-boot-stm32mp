@@ -3,7 +3,7 @@
 set -x -e
 
 DEVICE_TREE=stm32mp157-somic
-DEFCONFIG=stm32mp15_defconfig
+DEFCONFIG=stm32mp157_somic_defconfig
 BUILD_DIR=build
 
 rm -rf $BUILD_DIR
