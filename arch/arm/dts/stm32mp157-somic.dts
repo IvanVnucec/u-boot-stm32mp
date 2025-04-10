@@ -817,12 +817,6 @@
 		<STM32_PINMUX('A', 7, AF11)>; /* ETH_RGMII_RX_CTL */
 		bias-disable;
 	};
-	pins3 {
-		drive-push-pull;
-		bias-pull-up;
-		output-high;
-		slew-rate = <0>;
-	};
 };
 
 &ethernet0_rgmii_sleep_pins_a {
