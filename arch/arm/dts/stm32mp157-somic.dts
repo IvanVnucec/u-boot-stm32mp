@@ -110,14 +110,6 @@
 		regulator-always-on;
 	};
 
-	clocks {
-		clk_ext_camera: clk-ext-camera {
-			#clock-cells = <0>;
-			compatible = "fixed-clock";
-			clock-frequency = <24000000>;
-		};
-	};
-
 	dmic0: dmic-0 {
 		compatible = "dmic-codec";
 		#sound-dai-cells = <1>;
